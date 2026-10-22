@@ -1,0 +1,66 @@
+$breakpoint-md: 768px;
+
+@mixin mobile {
+  @media (max-width: $breakpoint-md) {
+    @content;
+  }
+}
+
+@mixin focus-ring {
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+@mixin control {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+
+  @include focus-ring;
+}
+
+@mixin button($variant: primary) {
+  padding: 8px 14px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  @if $variant == primary {
+    background: var(--accent);
+    color: #ffffff;
+
+    &:hover:not(:disabled) {
+      background: var(--accent-hover);
+    }
+  } @else if $variant == secondary {
+    border-color: var(--border);
+    background: var(--bg);
+    color: var(--text);
+
+    &:hover:not(:disabled) {
+      background: var(--surface);
+    }
+  } @else if $variant == danger {
+    border-color: var(--error);
+    background: transparent;
+    color: var(--error);
+
+    &:hover:not(:disabled) {
+      background: var(--error-soft);
+    }
+  }
+}

@@ -1,0 +1,161 @@
+@use '../../styles/mixins' as *;
+
+@keyframes slide-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  background: rgb(0 0 0 / 40%);
+}
+
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: min(520px, 100%);
+  padding: 32px 24px;
+  overflow-y: auto;
+  background: var(--bg);
+  box-shadow: var(--shadow);
+  animation: slide-in 0.2s ease-out;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+.close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--muted);
+  font-size: 22px;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:hover {
+    background: var(--surface);
+  }
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-right: 32px;
+}
+
+.title {
+  font-size: 20px;
+}
+
+.company {
+  margin: 0;
+  font-weight: 600;
+}
+
+.meta,
+.muted {
+  margin: 0;
+  color: var(--muted);
+}
+
+.link {
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+.match {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.matchText {
+  margin: 0;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.sectionTitle {
+  font-size: 14px;
+}
+
+.groups {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.groupLabel {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.notes {
+  @include control;
+
+  width: 100%;
+  resize: vertical;
+}
+
+.saveButton {
+  @include button(secondary);
+}
+
+.raw {
+  summary {
+    color: var(--muted);
+    cursor: pointer;
+  }
+
+  pre {
+    max-height: 300px;
+    padding: 12px;
+    overflow: auto;
+    border-radius: var(--radius);
+    background: var(--surface);
+    font-family: inherit;
+    white-space: pre-wrap;
+  }
+}
+
+.deleteButton {
+  @include button(danger);
+
+  align-self: flex-start;
+}

@@ -1,0 +1,54 @@
+@use '../../styles/mixins' as *;
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.neutral {
+  border-color: var(--border);
+  background: var(--surface);
+}
+
+.has {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.missing {
+  background: var(--error-soft);
+  color: var(--error);
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:hover {
+    background: var(--border);
+  }
+}
