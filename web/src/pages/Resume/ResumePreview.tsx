@@ -1,17 +1,35 @@
+import { useLayoutEffect, useRef } from 'react';
 import type { ResumeDraft, ResumeProfile } from './types';
 import styles from './ResumePreview.module.scss';
 
 interface ResumePreviewProps {
   profile: ResumeProfile;
   draft: ResumeDraft;
+  onOverflowChange?: (overflows: boolean) => void;
 }
 
 // A4 page laid out like the resume template. All sizes are relative to the
-// page width, so the preview scales to any column width without JS.
-export function ResumePreview({ profile, draft }: ResumePreviewProps) {
+// page width, so the same markup works on screen and in print.
+export function ResumePreview({ profile, draft, onOverflowChange }: ResumePreviewProps) {
+  const pageRef = useRef<HTMLElement>(null);
+
+  useLayoutEffect(() => {
+    const page = pageRef.current;
+    if (!page || !onOverflowChange) {
+      return;
+    }
+
+    const check = () => onOverflowChange(page.scrollHeight > page.clientHeight + 1);
+    check();
+
+    const observer = new ResizeObserver(check);
+    observer.observe(page);
+    return () => observer.disconnect();
+  }, [profile, draft, onOverflowChange]);
+
   return (
     <div className={styles.frame}>
-      <article className={styles.page} aria-label="Предпросмотр резюме">
+      <article ref={pageRef} className={styles.page} aria-label="Резюме">
         <h1 className={styles.name}>
           {profile.fullName}
           {draft.position && `, ${draft.position}`}
@@ -25,15 +43,19 @@ export function ResumePreview({ profile, draft }: ResumePreviewProps) {
           <p>{profile.city}</p>
         </div>
 
-        <section className={styles.section}>
-          <h2 className={styles.heading}>Обо мне</h2>
-          <p>{draft.about}</p>
-        </section>
+        {draft.about && (
+          <section className={styles.section}>
+            <h2 className={styles.heading}>Обо мне</h2>
+            <p>{draft.about}</p>
+          </section>
+        )}
 
-        <section className={styles.section}>
-          <h2 className={styles.heading}>Навыки</h2>
-          <p>{draft.skills.join(', ')}</p>
-        </section>
+        {draft.skills.length > 0 && (
+          <section className={styles.section}>
+            <h2 className={styles.heading}>Навыки</h2>
+            <p>{draft.skills.join(', ')}</p>
+          </section>
+        )}
 
         <section className={styles.section}>
           <h2 className={styles.heading}>Опыт работы</h2>
@@ -42,7 +64,7 @@ export function ResumePreview({ profile, draft }: ResumePreviewProps) {
               <p className={styles.itemTitle}>
                 – {item.title} ({item.period}) в «{item.company}»
               </p>
-              <p>{item.description}</p>
+              {item.description && <p>{item.description}</p>}
             </div>
           ))}
         </section>

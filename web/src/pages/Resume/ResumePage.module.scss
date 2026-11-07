@@ -1,9 +1,9 @@
 @use '../../styles/mixins' as *;
 
 .notice {
-  display: inline-block;
+  max-width: 760px;
   margin: -8px 0 20px;
-  padding: 8px 14px;
+  padding: 10px 14px;
   border-radius: var(--radius);
   background: var(--peach-soft);
   color: var(--warning);
@@ -140,6 +140,17 @@
 
 .input {
   @include control;
+
+  min-width: 0;
+}
+
+.addForm {
+  display: flex;
+  gap: 8px;
+
+  .input {
+    flex: 1;
+  }
 }
 
 .textarea {
@@ -184,17 +195,51 @@
   }
 }
 
+// The header, warning and page share one width, so their edges line up.
+// On wide screens that width is chosen so the whole page fits the window.
+.sheet {
+  width: 100%;
+
+  @media (min-width: 901px) {
+    max-width: calc((100vh - 110px) * 210 / 297);
+    margin: 0 auto;
+  }
+}
+
 .previewHeader {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
-  margin-bottom: 10px;
-  padding: 0 4px;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.previewTitle {
+  font-size: 16px;
   font-weight: 700;
 }
 
-.previewMeta {
-  color: var(--muted);
+.warning {
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  background: var(--error-soft);
+  color: var(--error);
   font-size: 13px;
-  font-weight: 400;
+  font-weight: 500;
+}
+
+// A copy of the page outside the app, used only for printing to PDF.
+.printRoot {
+  display: none;
+}
+
+@media print {
+  :global(body) > :global(*):not(.printRoot) {
+    display: none !important;
+  }
+
+  .printRoot {
+    display: block;
+  }
 }

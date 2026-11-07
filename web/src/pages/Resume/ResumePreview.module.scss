@@ -4,12 +4,6 @@
 .frame {
   container-type: inline-size;
   width: 100%;
-
-  // On wide screens the whole page fits the window height.
-  @media (min-width: 901px) {
-    max-width: calc((100vh - 120px) * 210 / 297);
-    margin: 0 auto;
-  }
 }
 
 .page {
@@ -62,4 +56,19 @@
 
 .itemTitle {
   font-weight: 700;
+}
+
+// In print the frame is exactly one A4 sheet. The height is a little less
+// than 297 mm so rounding never pushes an empty second page.
+@media print {
+  .frame {
+    width: 210mm;
+  }
+
+  .page {
+    aspect-ratio: auto;
+    height: 296mm;
+    border-radius: 0;
+    box-shadow: none;
+  }
 }

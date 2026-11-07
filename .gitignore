@@ -5,3 +5,4 @@ certs/
 .DS_Store
 .idea/
 *.log
+web/src/pages/Resume/profile.local.ts
