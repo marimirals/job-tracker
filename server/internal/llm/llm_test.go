@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -42,10 +43,11 @@ func TestParseExtracted(t *testing.T) {
 		"work_format": "удалёнка",
 		"grade": "Middle",
 		"hard_skills": ["React"],
-		"soft_skills": ["Командная работа"]
+		"soft_skills": ["Командная работа"],
+		"direction": "фронтенд"
 	}` + "\n```"
 
-	got, err := parseExtracted(reply)
+	got, err := parseExtracted(reply, []string{"Фронтенд", "DevOps"})
 	if err != nil {
 		t.Fatalf("parseExtracted() error = %v", err)
 	}
@@ -71,10 +73,23 @@ func TestParseExtracted(t *testing.T) {
 	if len(got.HardSkills) != 1 || len(got.SoftSkills) != 1 {
 		t.Errorf("skills = %v / %v", got.HardSkills, got.SoftSkills)
 	}
+	if got.Direction == nil || *got.Direction != "Фронтенд" {
+		t.Errorf("Direction = %v, want the stored name Фронтенд", got.Direction)
+	}
+}
+
+func TestParseExtractedUnknownDirection(t *testing.T) {
+	got, err := parseExtracted(`{"title": "Повар", "direction": "Кулинария"}`, []string{"DevOps"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Direction != nil {
+		t.Errorf("Direction = %q, want nil", *got.Direction)
+	}
 }
 
 func TestParseExtractedInvalid(t *testing.T) {
-	if _, err := parseExtracted("Извините, не могу помочь"); err == nil {
+	if _, err := parseExtracted("Извините, не могу помочь", nil); err == nil {
 		t.Error("expected error for reply without JSON")
 	}
 }
@@ -82,7 +97,7 @@ func TestParseExtractedInvalid(t *testing.T) {
 func TestExtractRetriesOnInvalidJSON(t *testing.T) {
 	client := &fakeClient{replies: []string{"not json", `{"title": "Dev", "hard_skills": [], "soft_skills": []}`}}
 
-	got, err := Extract(context.Background(), client, "текст вакансии")
+	got, err := Extract(context.Background(), client, "текст вакансии", []string{"DevOps"})
 	if err != nil {
 		t.Fatalf("Extract() error = %v", err)
 	}
@@ -92,7 +107,7 @@ func TestExtractRetriesOnInvalidJSON(t *testing.T) {
 }
 
 func TestExtractNilClient(t *testing.T) {
-	if _, err := Extract(context.Background(), nil, "text"); !errors.Is(err, ErrNotConfigured) {
+	if _, err := Extract(context.Background(), nil, "text", nil); !errors.Is(err, ErrNotConfigured) {
 		t.Errorf("error = %v, want ErrNotConfigured", err)
 	}
 }
@@ -209,5 +224,21 @@ func TestGigaChatCachesToken(t *testing.T) {
 	}
 	if authCalls.Load() != 1 {
 		t.Errorf("auth called %d times, want 1", authCalls.Load())
+	}
+}
+
+func TestGenerateResumeText(t *testing.T) {
+	long := strings.Repeat("Пишу на Python. ", 40)
+	client := &fakeClient{replies: []string{"oops", `{"position": " Junior ML-инженер ", "about": "` + long + `"}`}}
+
+	got, err := GenerateResumeText(context.Background(), client, ResumeInput{Direction: "ML", Skills: []string{"Python"}})
+	if err != nil {
+		t.Fatalf("GenerateResumeText() error = %v", err)
+	}
+	if got.Position != "Junior ML-инженер" {
+		t.Errorf("Position = %q", got.Position)
+	}
+	if n := len([]rune(got.About)); n > MaxAboutRunes || !strings.HasSuffix(got.About, ".") {
+		t.Errorf("About has %d runes and ends with %q", n, got.About[len(got.About)-3:])
 	}
 }

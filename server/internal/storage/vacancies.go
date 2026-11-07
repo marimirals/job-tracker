@@ -12,12 +12,12 @@ import (
 )
 
 const vacancyColumns = `v.id, v.url, v.source, v.title, v.company, v.salary_from, v.salary_to,
-	v.currency, v.work_format, v.grade, v.status, v.created_at`
+	v.currency, v.work_format, v.grade, v.status, v.direction_id, v.created_at`
 
 func scanVacancyColumns(v *model.Vacancy) []any {
 	return []any{
 		&v.ID, &v.URL, &v.Source, &v.Title, &v.Company, &v.SalaryFrom, &v.SalaryTo,
-		&v.Currency, &v.WorkFormat, &v.Grade, &v.Status, &v.CreatedAt,
+		&v.Currency, &v.WorkFormat, &v.Grade, &v.Status, &v.DirectionID, &v.CreatedAt,
 	}
 }
 
@@ -43,11 +43,13 @@ func (s *Storage) CreateVacancy(ctx context.Context, v model.NewVacancy) (int64,
 	var id int64
 	err = tx.QueryRow(ctx, `
 		INSERT INTO vacancies
-			(url, source, title, company, salary_from, salary_to, currency, work_format, grade, raw_text)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+			(url, source, title, company, salary_from, salary_to, currency, work_format, grade, raw_text,
+			 direction_id)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+			(SELECT id FROM directions WHERE lower(name) = lower($11)))
 		RETURNING id`,
 		v.URL, v.Source, v.Title, v.Company, v.SalaryFrom, v.SalaryTo,
-		v.Currency, v.WorkFormat, v.Grade, v.RawText,
+		v.Currency, v.WorkFormat, v.Grade, v.RawText, v.DirectionName,
 	).Scan(&id)
 	if isUniqueViolation(err) {
 		return 0, ErrDuplicate
@@ -73,7 +75,9 @@ func (s *Storage) CreateVacancy(ctx context.Context, v model.NewVacancy) (int64,
 	return id, tx.Commit(ctx)
 }
 
-func (s *Storage) ListVacancies(ctx context.Context) ([]model.Vacancy, error) {
+// ListVacancies returns all vacancies, or only those of one direction
+// when directionID is not nil.
+func (s *Storage) ListVacancies(ctx context.Context, directionID *int64) ([]model.Vacancy, error) {
 	hasMySkills, err := s.hasMySkills(ctx)
 	if err != nil {
 		return nil, err
@@ -86,8 +90,9 @@ func (s *Storage) ListVacancies(ctx context.Context) ([]model.Vacancy, error) {
 		FROM vacancies v
 		LEFT JOIN vacancy_skills vs ON vs.vacancy_id = v.id
 		LEFT JOIN my_skills ms ON ms.skill_id = vs.skill_id
+		WHERE $1::bigint IS NULL OR v.direction_id = $1
 		GROUP BY v.id
-		ORDER BY v.created_at DESC`)
+		ORDER BY v.created_at DESC`, directionID)
 	if err != nil {
 		return nil, err
 	}
@@ -162,8 +167,12 @@ func (s *Storage) UpdateVacancy(ctx context.Context, id int64, patch model.Vacan
 		UPDATE vacancies
 		SET status = COALESCE($2, status),
 			notes = COALESCE($3, notes),
+			direction_id = CASE WHEN $4 THEN $5 ELSE direction_id END,
 			updated_at = now()
-		WHERE id = $1`, id, patch.Status, patch.Notes)
+		WHERE id = $1`, id, patch.Status, patch.Notes, patch.DirectionID.Set, patch.DirectionID.Value)
+	if isForeignKeyViolation(err) {
+		return ErrUnknownDirection
+	}
 	if err != nil {
 		return err
 	}

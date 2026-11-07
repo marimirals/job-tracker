@@ -22,18 +22,3 @@ export interface ResumeProfile {
   education: string[];
   courses: CourseItem[];
 }
-
-// Generated part, different for each direction.
-export interface ResumeDraft {
-  position: string;
-  about: string;
-  skills: string[];
-  missing: string[];
-  vacancyCount: number;
-}
-
-export interface ResumeDirection {
-  id: string;
-  name: string;
-  draft: ResumeDraft;
-}

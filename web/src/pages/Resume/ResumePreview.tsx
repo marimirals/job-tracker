@@ -1,10 +1,11 @@
 import { useLayoutEffect, useRef } from 'react';
-import type { ResumeDraft, ResumeProfile } from './types';
+import type { ResumeUpdate } from '../../api/types';
+import type { ResumeProfile } from './types';
 import styles from './ResumePreview.module.scss';
 
 interface ResumePreviewProps {
   profile: ResumeProfile;
-  draft: ResumeDraft;
+  draft: ResumeUpdate;
   onOverflowChange?: (overflows: boolean) => void;
 }
 

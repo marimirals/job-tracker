@@ -48,7 +48,7 @@ func (h *Handler) createVacancy(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) listVacancies(w http.ResponseWriter, r *http.Request) {
-	vacancies, err := h.store.ListVacancies(r.Context())
+	vacancies, err := h.store.ListVacancies(r.Context(), nil)
 	if err != nil {
 		writeInternalError(w, err)
 		return
@@ -86,6 +86,10 @@ func (h *Handler) updateVacancy(w http.ResponseWriter, r *http.Request) {
 	if err := h.store.UpdateVacancy(r.Context(), id, patch); err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			writeError(w, http.StatusNotFound, "vacancy not found")
+			return
+		}
+		if errors.Is(err, storage.ErrUnknownDirection) {
+			writeError(w, http.StatusBadRequest, "unknown direction")
 			return
 		}
 		writeInternalError(w, err)

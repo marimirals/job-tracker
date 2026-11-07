@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { useMySkills, useSkillGaps, useUpdateMySkills } from '../../api/queries';
+import { useDirections, useMySkills, useSkillGaps, useUpdateMySkills } from '../../api/queries';
 import type { SkillType } from '../../api/types';
 import { EmptyState } from '../../components/EmptyState/EmptyState';
 import { PageHeader } from '../../components/PageHeader/PageHeader';
@@ -30,26 +30,71 @@ const COLOR_MISSING = '#f4a983';
 const COLOR_HAS = '#aaa572';
 
 export function StatsPage() {
-  const { data: stats, isPending, isError } = useSkillGaps();
+  const [directionId, setDirectionId] = useState<number | null>(null);
+  const { data: stats, isPending, isError } = useSkillGaps(directionId);
+  const { data: directions = [] } = useDirections();
   const { data: mySkills = NO_SKILLS } = useMySkills();
   const updateSkills = useUpdateMySkills();
   const [scope, setScope] = useState<Scope>('missing');
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
 
+  const header = (
+    <PageHeader
+      title="Статистика навыков"
+      description="Что чаще всего просят в сохранённых вакансиях и чего из этого у тебя пока нет."
+      actions={
+        <>
+          <select
+            className={styles.select}
+            value={directionId ?? ''}
+            aria-label="Направление"
+            onChange={(event) => setDirectionId(event.target.value ? Number(event.target.value) : null)}
+          >
+            <option value="">Все направления</option>
+            {directions.map((direction) => (
+              <option key={direction.id} value={direction.id}>
+                {direction.name}
+              </option>
+            ))}
+          </select>
+          <Segmented label="Какие навыки показать" options={SCOPE_OPTIONS} value={scope} onChange={setScope} />
+          <Segmented label="Тип навыков" options={TYPE_OPTIONS} value={typeFilter} onChange={setTypeFilter} />
+        </>
+      }
+    />
+  );
+
   if (isPending) {
-    return <p className={styles.state}>Считаю статистику…</p>;
+    return (
+      <section>
+        {header}
+        <p className={styles.state}>Считаю статистику…</p>
+      </section>
+    );
   }
 
   if (isError) {
-    return <EmptyState title="Не удалось загрузить статистику" description="Проверь, что сервер запущен, и обнови страницу." />;
+    return (
+      <section>
+        {header}
+        <EmptyState title="Не удалось загрузить статистику" description="Проверь, что сервер запущен, и обнови страницу." />
+      </section>
+    );
   }
 
   if (stats.totalVacancies === 0) {
     return (
-      <EmptyState
-        title="Статистика появится после первых вакансий"
-        description="Сохрани несколько вакансий через расширение, и здесь будет видно, каких навыков чаще всего не хватает."
-      />
+      <section>
+        {header}
+        <EmptyState
+          title={directionId === null ? 'Статистика появится после первых вакансий' : 'В этом направлении пока нет вакансий'}
+          description={
+            directionId === null
+              ? 'Сохрани несколько вакансий через расширение, и здесь будет видно, каких навыков чаще всего не хватает.'
+              : 'Назначь направление вакансиям в таблице или сохрани новые: нейросеть определит направление сама.'
+          }
+        />
+      </section>
     );
   }
 
@@ -62,16 +107,7 @@ export function StatsPage() {
 
   return (
     <section>
-      <PageHeader
-        title="Статистика навыков"
-        description="Что чаще всего просят в сохранённых вакансиях и чего из этого у тебя пока нет."
-        actions={
-          <>
-            <Segmented label="Какие навыки показать" options={SCOPE_OPTIONS} value={scope} onChange={setScope} />
-            <Segmented label="Тип навыков" options={TYPE_OPTIONS} value={typeFilter} onChange={setTypeFilter} />
-          </>
-        }
-      />
+      {header}
 
       <div className={styles.cards}>
         <div className={styles.card}>

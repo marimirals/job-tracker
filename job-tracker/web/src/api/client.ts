@@ -26,7 +26,7 @@ export async function request<T>(path: string, { method = 'GET', body }: Request
   });
 
   if (!response.ok) {
-    throw new ApiError(response.status, `Сервер ответил ошибкой ${response.status}`);
+    throw new ApiError(response.status, await readErrorMessage(response));
   }
 
   if (response.status === 204) {
@@ -34,4 +34,17 @@ export async function request<T>(path: string, { method = 'GET', body }: Request
   }
 
   return (await response.json()) as T;
+}
+
+// The server answers errors with {"error": "..."}; fall back to the status code.
+async function readErrorMessage(response: Response): Promise<string> {
+  try {
+    const data = (await response.json()) as { error?: string };
+    if (data.error) {
+      return data.error;
+    }
+  } catch {
+    // The body is not JSON.
+  }
+  return `Сервер ответил ошибкой ${response.status}`;
 }

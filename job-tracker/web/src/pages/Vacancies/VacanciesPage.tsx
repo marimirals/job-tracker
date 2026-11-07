@@ -8,9 +8,10 @@ import {
   useReactTable,
   type SortingState,
 } from '@tanstack/react-table';
-import { useVacancies } from '../../api/queries';
+import { useDirections, useVacancies } from '../../api/queries';
 import type { Vacancy, VacancyStatus } from '../../api/types';
 import { EmptyState } from '../../components/EmptyState/EmptyState';
+import { DirectionSelect } from '../../components/DirectionSelect/DirectionSelect';
 import { MatchBadge } from '../../components/MatchBadge/MatchBadge';
 import { PageHeader } from '../../components/PageHeader/PageHeader';
 import { StatusSelect } from '../../components/StatusSelect/StatusSelect';
@@ -20,6 +21,8 @@ import { VacancyDrawer } from './VacancyDrawer';
 import styles from './VacanciesPage.module.scss';
 
 type StatusFilter = VacancyStatus | 'all';
+// 'all', 'none' (no direction) or a direction id as a string.
+type DirectionFilter = string;
 
 const NO_VACANCIES: Vacancy[] = [];
 
@@ -52,6 +55,11 @@ const columns = [
     header: 'Совпадение',
     cell: ({ row }) => <MatchBadge value={row.original.match} />,
   }),
+  columnHelper.accessor('directionId', {
+    header: 'Направление',
+    enableSorting: false,
+    cell: ({ row }) => <DirectionSelect vacancyId={row.original.id} value={row.original.directionId} />,
+  }),
   columnHelper.accessor('status', {
     header: 'Статус',
     enableSorting: false,
@@ -65,15 +73,23 @@ const columns = [
 
 export function VacanciesPage() {
   const { data: vacancies = NO_VACANCIES, isPending, isError, error } = useVacancies();
+  const { data: directions = [] } = useDirections();
   const [sorting, setSorting] = useState<SortingState>([{ id: 'createdAt', desc: true }]);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [directionFilter, setDirectionFilter] = useState<DirectionFilter>('all');
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
   const data = useMemo(
     () =>
-      statusFilter === 'all' ? vacancies : vacancies.filter((v) => v.status === statusFilter),
-    [vacancies, statusFilter],
+      vacancies.filter((v) => {
+        const statusMatches = statusFilter === 'all' || v.status === statusFilter;
+        const directionMatches =
+          directionFilter === 'all' ||
+          (directionFilter === 'none' ? v.directionId === null : v.directionId === Number(directionFilter));
+        return statusMatches && directionMatches;
+      }),
+    [vacancies, statusFilter, directionFilter],
   );
 
   const table = useReactTable({
@@ -128,6 +144,20 @@ export function VacanciesPage() {
               value={search}
               onChange={(event) => setSearch(event.target.value)}
             />
+            <select
+              className={styles.select}
+              value={directionFilter}
+              aria-label="Фильтр по направлению"
+              onChange={(event) => setDirectionFilter(event.target.value)}
+            >
+              <option value="all">Все направления</option>
+              {directions.map((direction) => (
+                <option key={direction.id} value={direction.id}>
+                  {direction.name}
+                </option>
+              ))}
+              <option value="none">Без направления</option>
+            </select>
             <select
               className={styles.select}
               value={statusFilter}

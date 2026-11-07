@@ -78,3 +78,21 @@ a {
 ::selection {
   background: var(--peach-soft);
 }
+
+// Printing is used only to save a resume as PDF: one A4 sheet without margins
+// (the resume page has its own) and without the decorative background.
+@page {
+  size: A4;
+  margin: 0;
+}
+
+@media print {
+  body {
+    min-height: 0;
+    background: #ffffff;
+  }
+
+  body::before {
+    display: none;
+  }
+}

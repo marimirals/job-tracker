@@ -25,14 +25,17 @@ const extractPrompt = `Ты извлекаешь данные из текста 
   "work_format": "remote" | "hybrid" | "office" | null,
   "grade": "Intern" | "Junior" | "Middle" | "Senior" | "Lead" | null,
   "hard_skills": string[],
-  "soft_skills": string[]
+  "soft_skills": string[],
+  "direction": string | null
 }
 Правила:
 - Страница может содержать меню, рекламу и похожие вакансии. Используй только основную вакансию.
 - Зарплата — целые числа в месяц, без пробелов и валюты. Рубли обозначай как "RUR".
 - Навыки — короткие общепринятые названия: "React", "TypeScript", "Командная работа".
 - Бери только навыки, которые явно упомянуты в требованиях или в «будет плюсом». Без дублей.
-- Если данных нет, ставь null или пустой массив. Ничего не придумывай.`
+- Если данных нет, ставь null или пустой массив. Ничего не придумывай.
+- direction — направление вакансии, ровно одно название из списка ниже, без изменений.
+  Если вакансия не подходит ни к одному, ставь null.`
 
 type Extracted struct {
 	Title      string
@@ -44,6 +47,7 @@ type Extracted struct {
 	Grade      *string
 	HardSkills []string
 	SoftSkills []string
+	Direction  *string
 }
 
 type rawExtracted struct {
@@ -56,11 +60,13 @@ type rawExtracted struct {
 	Grade      *string  `json:"grade"`
 	HardSkills []string `json:"hard_skills"`
 	SoftSkills []string `json:"soft_skills"`
+	Direction  *string  `json:"direction"`
 }
 
-// Extract asks the model to turn vacancy text into structured data.
-// If the reply is not valid JSON, it asks once more before giving up.
-func Extract(ctx context.Context, client Client, text string) (Extracted, error) {
+// Extract asks the model to turn vacancy text into structured data and to
+// pick one of the given directions. If the reply is not valid JSON, it asks
+// once more before giving up.
+func Extract(ctx context.Context, client Client, text string, directions []string) (Extracted, error) {
 	if client == nil {
 		return Extracted{}, ErrNotConfigured
 	}
@@ -70,14 +76,16 @@ func Extract(ctx context.Context, client Client, text string) (Extracted, error)
 		return Extracted{}, errors.New("empty vacancy text")
 	}
 
+	prompt := extractPrompt + "\nНаправления: " + quoteList(directions)
+
 	var lastErr error
 	for attempt := 0; attempt < 2; attempt++ {
-		reply, err := client.Complete(ctx, extractPrompt, text)
+		reply, err := client.Complete(ctx, prompt, text)
 		if err != nil {
 			return Extracted{}, err
 		}
 
-		result, err := parseExtracted(reply)
+		result, err := parseExtracted(reply, directions)
 		if err == nil {
 			return result, nil
 		}
@@ -87,15 +95,9 @@ func Extract(ctx context.Context, client Client, text string) (Extracted, error)
 	return Extracted{}, fmt.Errorf("LLM returned invalid JSON: %w", lastErr)
 }
 
-func parseExtracted(reply string) (Extracted, error) {
-	start := strings.Index(reply, "{")
-	end := strings.LastIndex(reply, "}")
-	if start == -1 || end <= start {
-		return Extracted{}, errors.New("no JSON object in reply")
-	}
-
+func parseExtracted(reply string, directions []string) (Extracted, error) {
 	var raw rawExtracted
-	if err := json.Unmarshal([]byte(reply[start:end+1]), &raw); err != nil {
+	if err := decodeJSONObject(reply, &raw); err != nil {
 		return Extracted{}, err
 	}
 
@@ -109,6 +111,7 @@ func parseExtracted(reply string) (Extracted, error) {
 		Grade:      cleanString(raw.Grade),
 		HardSkills: raw.HardSkills,
 		SoftSkills: raw.SoftSkills,
+		Direction:  matchName(cleanString(raw.Direction), directions),
 	}
 
 	if result.WorkFormat != nil && !model.IsValidWorkFormat(*result.WorkFormat) {
@@ -123,6 +126,40 @@ func parseExtracted(reply string) (Extracted, error) {
 	}
 
 	return result, nil
+}
+
+// decodeJSONObject cuts the first {...} block out of a model reply (models
+// like to wrap JSON in markdown or add a sentence) and decodes it.
+func decodeJSONObject(reply string, target any) error {
+	start := strings.Index(reply, "{")
+	end := strings.LastIndex(reply, "}")
+	if start == -1 || end <= start {
+		return errors.New("no JSON object in reply")
+	}
+	return json.Unmarshal([]byte(reply[start:end+1]), target)
+}
+
+// matchName returns the list item equal to value ignoring case, so a model
+// answer like "devops" maps to the stored "DevOps". Unknown values become nil.
+func matchName(value *string, names []string) *string {
+	if value == nil {
+		return nil
+	}
+	for _, name := range names {
+		if strings.EqualFold(name, *value) {
+			match := name
+			return &match
+		}
+	}
+	return nil
+}
+
+func quoteList(items []string) string {
+	quoted := make([]string, 0, len(items))
+	for _, item := range items {
+		quoted = append(quoted, `"`+item+`"`)
+	}
+	return strings.Join(quoted, ", ")
 }
 
 // flexInt accepts numbers in any form models tend to produce:

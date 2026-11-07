@@ -1,5 +1,14 @@
 @use '../../styles/mixins' as *;
 
+.select {
+  @include control;
+
+  padding-top: 7px;
+  padding-bottom: 7px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
 .cards {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

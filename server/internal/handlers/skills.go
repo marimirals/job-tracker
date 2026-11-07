@@ -52,18 +52,22 @@ func (h *Handler) replaceMySkills(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, saved)
 }
 
+// skillGaps returns skill statistics for all vacancies or, with
+// ?direction=<id>, only for one direction.
 func (h *Handler) skillGaps(w http.ResponseWriter, r *http.Request) {
-	vacancies, err := h.store.ListVacancies(r.Context())
+	directionID, err := optionalQueryID(r, "direction")
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	vacancies, err := h.store.ListVacancies(r.Context(), directionID)
 	if err != nil {
 		writeInternalError(w, err)
 		return
 	}
 
-	counts, err := h.store.SkillCounts(r.Context())
-	if err != nil {
-		writeInternalError(w, err)
-		return
-	}
+	counts, err := h.store.SkillCounts(r.Context(), directionID)
 
 	matches := make([]*int, 0, len(vacancies))
 	for _, vacancy := range vacancies {

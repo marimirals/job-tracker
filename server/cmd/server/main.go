@@ -21,6 +21,7 @@ import (
 	"jobtracker/internal/hh"
 	"jobtracker/internal/ingest"
 	"jobtracker/internal/llm"
+	"jobtracker/internal/resume"
 	"jobtracker/internal/storage"
 	"jobtracker/migrations"
 )
@@ -61,7 +62,8 @@ func run() error {
 
 	store := storage.New(pool)
 	ingestService := ingest.NewService(store, hh.NewClient(cfg.HHUserAgent), llmClient)
-	handler := handlers.New(store, ingestService)
+	resumeService := resume.NewService(store, llmClient)
+	handler := handlers.New(store, ingestService, resumeService)
 
 	server := &http.Server{
 		Addr:              ":" + cfg.Port,

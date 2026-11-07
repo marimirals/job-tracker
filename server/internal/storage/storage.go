@@ -10,11 +10,15 @@ import (
 )
 
 var (
-	ErrNotFound  = errors.New("not found")
-	ErrDuplicate = errors.New("already exists")
+	ErrNotFound         = errors.New("not found")
+	ErrDuplicate        = errors.New("already exists")
+	ErrUnknownDirection = errors.New("unknown direction")
 )
 
-const uniqueViolation = "23505"
+const (
+	uniqueViolation     = "23505"
+	foreignKeyViolation = "23503"
+)
 
 type Storage struct {
 	pool *pgxpool.Pool
@@ -40,6 +44,14 @@ func upsertSkill(ctx context.Context, tx pgx.Tx, name string) (int64, error) {
 }
 
 func isUniqueViolation(err error) bool {
+	return hasCode(err, uniqueViolation)
+}
+
+func isForeignKeyViolation(err error) bool {
+	return hasCode(err, foreignKeyViolation)
+}
+
+func hasCode(err error, code string) bool {
 	var pgErr *pgconn.PgError
-	return errors.As(err, &pgErr) && pgErr.Code == uniqueViolation
+	return errors.As(err, &pgErr) && pgErr.Code == code
 }

@@ -1,6 +1,9 @@
 package model
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 const (
 	SourceHH    = "hh"
@@ -34,19 +37,20 @@ func IsValidWorkFormat(format string) bool {
 }
 
 type Vacancy struct {
-	ID         int64     `json:"id"`
-	URL        string    `json:"url"`
-	Source     string    `json:"source"`
-	Title      string    `json:"title"`
-	Company    *string   `json:"company"`
-	SalaryFrom *int      `json:"salaryFrom"`
-	SalaryTo   *int      `json:"salaryTo"`
-	Currency   *string   `json:"currency"`
-	WorkFormat *string   `json:"workFormat"`
-	Grade      *string   `json:"grade"`
-	Status     string    `json:"status"`
-	Match      *int      `json:"match"`
-	CreatedAt  time.Time `json:"createdAt"`
+	ID          int64     `json:"id"`
+	URL         string    `json:"url"`
+	Source      string    `json:"source"`
+	Title       string    `json:"title"`
+	Company     *string   `json:"company"`
+	SalaryFrom  *int      `json:"salaryFrom"`
+	SalaryTo    *int      `json:"salaryTo"`
+	Currency    *string   `json:"currency"`
+	WorkFormat  *string   `json:"workFormat"`
+	Grade       *string   `json:"grade"`
+	Status      string    `json:"status"`
+	DirectionID *int64    `json:"directionId"`
+	Match       *int      `json:"match"`
+	CreatedAt   time.Time `json:"createdAt"`
 }
 
 type VacancySkill struct {
@@ -63,8 +67,30 @@ type VacancyDetails struct {
 }
 
 type VacancyPatch struct {
-	Status *string `json:"status"`
-	Notes  *string `json:"notes"`
+	Status      *string    `json:"status"`
+	Notes       *string    `json:"notes"`
+	DirectionID OptionalID `json:"directionId"`
+}
+
+// OptionalID tells apart a missing JSON field from an explicit null:
+// {"directionId": null} clears the direction, while no field leaves it as is.
+type OptionalID struct {
+	Set   bool
+	Value *int64
+}
+
+func (o *OptionalID) UnmarshalJSON(data []byte) error {
+	o.Set = true
+	if string(data) == "null" {
+		o.Value = nil
+		return nil
+	}
+	var value int64
+	if err := json.Unmarshal(data, &value); err != nil {
+		return err
+	}
+	o.Value = &value
+	return nil
 }
 
 type SavedVacancy struct {
@@ -91,6 +117,9 @@ type NewVacancy struct {
 	Grade      *string
 	RawText    string
 	Skills     []SkillInput
+	// DirectionName is the direction suggested by the LLM; it is matched
+	// against existing directions by name when the vacancy is saved.
+	DirectionName *string
 }
 
 type SkillCount struct {
@@ -113,4 +142,28 @@ type SkillGaps struct {
 	AverageMatch   *int        `json:"averageMatch"`
 	HighMatchCount int         `json:"highMatchCount"`
 	Skills         []SkillStat `json:"skills"`
+}
+
+type Direction struct {
+	ID           int64  `json:"id"`
+	Name         string `json:"name"`
+	VacancyCount int    `json:"vacancyCount"`
+}
+
+// Resume is the part of a resume that differs between directions.
+// Contacts, experience and education live in the frontend profile.
+type Resume struct {
+	DirectionID  int64      `json:"directionId"`
+	Position     string     `json:"position"`
+	About        string     `json:"about"`
+	Skills       []string   `json:"skills"`
+	Missing      []string   `json:"missing"`
+	VacancyCount int        `json:"vacancyCount"`
+	GeneratedAt  *time.Time `json:"generatedAt"`
+}
+
+type ResumeUpdate struct {
+	Position string   `json:"position"`
+	About    string   `json:"about"`
+	Skills   []string `json:"skills"`
 }

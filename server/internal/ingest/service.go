@@ -85,7 +85,12 @@ func (s *Service) parse(ctx context.Context, in Input) model.NewVacancy {
 		}
 	}
 
-	extracted, err := llm.Extract(ctx, s.llm, textForLLM)
+	directions, err := s.store.DirectionNames(ctx)
+	if err != nil {
+		slog.Warn("could not load directions", "error", err)
+	}
+
+	extracted, err := llm.Extract(ctx, s.llm, textForLLM, directions)
 	if err != nil {
 		slog.Warn("vacancy saved without LLM parsing", "url", in.URL, "error", err)
 		return vacancy
@@ -124,6 +129,7 @@ func applyExtracted(vacancy *model.NewVacancy, data llm.Extracted, replaceTitle 
 	fill(&vacancy.Currency, data.Currency)
 	fill(&vacancy.WorkFormat, data.WorkFormat)
 	fill(&vacancy.Grade, data.Grade)
+	vacancy.DirectionName = data.Direction
 	vacancy.Skills = skills.Build(data.HardSkills, data.SoftSkills)
 }
 

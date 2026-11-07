@@ -1,0 +1,204 @@
+@use '../../styles/mixins' as *;
+
+.state {
+  color: var(--muted);
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(320px, 0.85fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 20px;
+
+  @include mobile {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.panel {
+  @include panel;
+
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.intro {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.7);
+
+  p {
+    margin: 0;
+  }
+}
+
+.source {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.saveStatus {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.saveError {
+  color: var(--error);
+}
+
+.error {
+  margin: -8px 0 0;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  background: var(--error-soft);
+  color: var(--error);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label {
+  font-weight: 700;
+}
+
+.labelRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.counter {
+  color: var(--muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.counterOver {
+  color: var(--error);
+  font-weight: 600;
+}
+
+.input {
+  @include control;
+
+  min-width: 0;
+}
+
+.addForm {
+  display: flex;
+  gap: 8px;
+
+  .input {
+    flex: 1;
+  }
+}
+
+.textarea {
+  @include control;
+
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.primary {
+  @include button(primary);
+}
+
+.secondary {
+  @include button(secondary);
+}
+
+.deleteButton {
+  @include button(danger);
+
+  align-self: flex-start;
+  padding: 6px 14px;
+  font-size: 13px;
+}
+
+.preview {
+  position: sticky;
+  top: 20px;
+
+  @include mobile {
+    position: static;
+  }
+}
+
+// The header, warning and page share one width, so their edges line up.
+// On wide screens that width is chosen so the whole page fits the window.
+.sheet {
+  width: 100%;
+
+  @media (min-width: 901px) {
+    max-width: calc((100vh - 110px) * 210 / 297);
+    margin: 0 auto;
+  }
+}
+
+.previewHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.previewTitle {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.warning {
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  background: var(--error-soft);
+  color: var(--error);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+// A copy of the page outside the app, used only for printing to PDF.
+.printRoot {
+  display: none;
+}
+
+@media print {
+  :global(body) > :global(*):not(.printRoot) {
+    display: none !important;
+  }
+
+  .printRoot {
+    display: block;
+  }
+}

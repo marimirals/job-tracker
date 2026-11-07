@@ -130,6 +130,12 @@
   gap: 10px;
 }
 
+.fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px 40px;
+}
+
 .sectionTitle {
   font-size: 14px;
   font-weight: 700;

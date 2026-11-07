@@ -1,14 +1,7 @@
 @use '../../styles/mixins' as *;
 
-.notice {
-  display: inline-block;
-  margin: -8px 0 20px;
-  padding: 8px 14px;
-  border-radius: var(--radius);
-  background: var(--peach-soft);
-  color: var(--warning);
-  font-size: 13px;
-  font-weight: 500;
+.state {
+  color: var(--muted);
 }
 
 .tabs {
@@ -80,121 +73,43 @@
 
   @include focus-ring;
 
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
+  &:hover {
+    border-color: rgba(94, 90, 52, 0.5);
+    color: var(--text);
   }
 }
 
-.workspace {
-  display: grid;
-  grid-template-columns: minmax(320px, 0.85fr) minmax(0, 1fr);
-  align-items: start;
-  gap: 20px;
-
-  @include mobile {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-.panel {
-  @include panel;
-
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.source {
-  margin: 0;
-  color: var(--muted);
-  font-size: 13px;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.label {
-  font-weight: 700;
-}
-
-.labelRow {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-}
-
-.counter {
-  color: var(--muted);
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-}
-
-.counterOver {
-  color: var(--error);
-  font-weight: 600;
-}
-
-.input {
-  @include control;
-}
-
-.textarea {
-  @include control;
-
-  resize: vertical;
-  line-height: 1.5;
-}
-
-.chips {
+.newDirection {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 6px;
 }
 
-.hint {
-  margin: 0;
-  color: var(--muted);
-  font-size: 13px;
+.newInput {
+  @include control;
+
+  width: 240px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  border-radius: 999px;
 }
 
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.primary {
+.createButton {
   @include button(primary);
+
+  padding: 8px 16px;
 }
 
-.secondary {
+.cancelButton {
   @include button(secondary);
+
+  padding: 8px 16px;
 }
 
-.preview {
-  position: sticky;
-  top: 20px;
-
-  @include mobile {
-    position: static;
-  }
-}
-
-.previewHeader {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  margin-bottom: 10px;
-  padding: 0 4px;
-  font-weight: 700;
-}
-
-.previewMeta {
-  color: var(--muted);
+.error {
+  margin: -6px 0 16px;
+  color: var(--error);
   font-size: 13px;
-  font-weight: 400;
+  font-weight: 500;
 }

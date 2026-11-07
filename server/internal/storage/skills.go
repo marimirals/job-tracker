@@ -52,9 +52,10 @@ func (s *Storage) ListAllSkills(ctx context.Context) ([]string, error) {
 		ORDER BY lower(s.name)`)
 }
 
-// SkillCounts returns how many vacancies mention each skill.
+// SkillCounts returns how many vacancies mention each skill, across all
+// vacancies or only one direction when directionID is not nil.
 // If a skill is hard in some vacancies and soft in others, the more frequent type wins.
-func (s *Storage) SkillCounts(ctx context.Context) ([]model.SkillCount, error) {
+func (s *Storage) SkillCounts(ctx context.Context, directionID *int64) ([]model.SkillCount, error) {
 	rows, err := s.pool.Query(ctx, `
 		SELECT s.name,
 			mode() WITHIN GROUP (ORDER BY vs.type) AS type,
@@ -62,8 +63,10 @@ func (s *Storage) SkillCounts(ctx context.Context) ([]model.SkillCount, error) {
 			EXISTS (SELECT 1 FROM my_skills ms WHERE ms.skill_id = s.id) AS has
 		FROM vacancy_skills vs
 		JOIN skills s ON s.id = vs.skill_id
+		JOIN vacancies v ON v.id = vs.vacancy_id
+		WHERE $1::bigint IS NULL OR v.direction_id = $1
 		GROUP BY s.id, s.name
-		ORDER BY count DESC, lower(s.name)`)
+		ORDER BY count DESC, lower(s.name)`, directionID)
 	if err != nil {
 		return nil, err
 	}

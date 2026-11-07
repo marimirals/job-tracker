@@ -1,5 +1,8 @@
 import { HIGH_MATCH } from '../constants';
 import type {
+  Direction,
+  Resume,
+  ResumeUpdate,
   SkillGapsStats,
   SkillStat,
   SkillType,
@@ -22,6 +25,14 @@ const RAW_TEXT = 'Пример текста вакансии. Здесь буд�
 
 let mySkills: string[] = ['React', 'TypeScript', 'JavaScript', 'HTML', 'CSS', 'Git', 'Командная работа'];
 
+let directions: Omit<Direction, 'vacancyCount'>[] = [
+  { id: 1, name: 'Фронтенд и фулстек' },
+  { id: 2, name: 'DevOps' },
+  { id: 3, name: 'ML-инженер' },
+];
+
+const resumes = new Map<number, ResumeUpdate & { generatedAt: string | null }>();
+
 let vacancies: MockVacancy[] = [
   {
     id: 1,
@@ -35,6 +46,7 @@ let vacancies: MockVacancy[] = [
     workFormat: 'remote',
     grade: 'Middle',
     status: 'saved',
+    directionId: 1,
     createdAt: '2026-10-21T10:00:00Z',
     notes: '',
     rawText: RAW_TEXT,
@@ -55,6 +67,7 @@ let vacancies: MockVacancy[] = [
     workFormat: 'hybrid',
     grade: 'Junior',
     status: 'applied',
+    directionId: 1,
     createdAt: '2026-10-20T12:30:00Z',
     notes: 'Откликнулась с сопроводительным',
     rawText: RAW_TEXT,
@@ -72,6 +85,7 @@ let vacancies: MockVacancy[] = [
     workFormat: 'office',
     grade: 'Middle+',
     status: 'interview',
+    directionId: 1,
     createdAt: '2026-10-18T09:15:00Z',
     notes: '',
     rawText: RAW_TEXT,
@@ -92,6 +106,7 @@ let vacancies: MockVacancy[] = [
     workFormat: 'remote',
     grade: 'Middle',
     status: 'saved',
+    directionId: 1,
     createdAt: '2026-10-17T16:40:00Z',
     notes: '',
     rawText: RAW_TEXT,
@@ -109,6 +124,7 @@ let vacancies: MockVacancy[] = [
     workFormat: 'remote',
     grade: 'Middle',
     status: 'rejected',
+    directionId: 1,
     createdAt: '2026-10-15T08:00:00Z',
     notes: '',
     rawText: RAW_TEXT,
@@ -126,6 +142,7 @@ let vacancies: MockVacancy[] = [
     workFormat: 'office',
     grade: 'Junior',
     status: 'responded',
+    directionId: 1,
     createdAt: '2026-10-14T14:20:00Z',
     notes: '',
     rawText: RAW_TEXT,
@@ -159,6 +176,7 @@ function toVacancy(v: MockVacancy): Vacancy {
     workFormat: v.workFormat,
     grade: v.grade,
     status: v.status,
+    directionId: v.directionId,
     createdAt: v.createdAt,
     match: computeMatch(v.skills),
   };
@@ -221,11 +239,13 @@ export const mockApi = {
     return [...names].sort((a, b) => a.localeCompare(b, 'ru'));
   },
 
-  async getSkillGaps(): Promise<SkillGapsStats> {
+  async getSkillGaps(directionId: number | null = null): Promise<SkillGapsStats> {
     await delay();
     const stats = new Map<string, SkillStat>();
+    const selected =
+      directionId === null ? vacancies : vacancies.filter((v) => v.directionId === directionId);
 
-    for (const vacancy of vacancies) {
+    for (const vacancy of selected) {
       for (const skill of vacancy.skills) {
         const stat = stats.get(skill.name) ?? {
           name: skill.name,
@@ -239,12 +259,12 @@ export const mockApi = {
       }
     }
 
-    const total = vacancies.length;
+    const total = selected.length;
     const skills = [...stats.values()]
       .map((stat) => ({ ...stat, percent: total ? Math.round((stat.count / total) * 100) : 0 }))
       .sort((a, b) => b.count - a.count);
 
-    const matches = vacancies
+    const matches = selected
       .map((v) => computeMatch(v.skills))
       .filter((m): m is number => m !== null);
 
@@ -256,5 +276,65 @@ export const mockApi = {
       highMatchCount: matches.filter((m) => m >= HIGH_MATCH).length,
       skills,
     };
+  },
+
+  async getDirections(): Promise<Direction[]> {
+    await delay();
+    return directions.map((d) => ({
+      ...d,
+      vacancyCount: vacancies.filter((v) => v.directionId === d.id).length,
+    }));
+  },
+
+  async createDirection(name: string): Promise<Direction> {
+    await delay();
+    const direction = { id: Math.max(0, ...directions.map((d) => d.id)) + 1, name: name.trim() };
+    directions = [...directions, direction];
+    return { ...direction, vacancyCount: 0 };
+  },
+
+  async deleteDirection(id: number): Promise<void> {
+    await delay();
+    directions = directions.filter((d) => d.id !== id);
+    resumes.delete(id);
+    vacancies = vacancies.map((v) => (v.directionId === id ? { ...v, directionId: null } : v));
+  },
+
+  async getResume(directionId: number): Promise<Resume> {
+    await delay();
+    const saved = resumes.get(directionId) ?? { position: '', about: '', skills: [], generatedAt: null };
+    const gaps = await mockApi.getSkillGaps(directionId);
+    const inResume = new Set(saved.skills.map((s) => s.toLowerCase()));
+    return {
+      directionId,
+      ...saved,
+      missing: gaps.skills
+        .filter((s) => !s.has && s.type === 'hard' && !inResume.has(s.name.toLowerCase()))
+        .slice(0, 8)
+        .map((s) => s.name),
+      vacancyCount: gaps.totalVacancies,
+    };
+  },
+
+  async saveResume(directionId: number, update: ResumeUpdate): Promise<Resume> {
+    await delay();
+    const generatedAt = resumes.get(directionId)?.generatedAt ?? null;
+    resumes.set(directionId, { ...update, generatedAt });
+    return mockApi.getResume(directionId);
+  },
+
+  async generateResume(directionId: number): Promise<Resume> {
+    await delay(800);
+    const name = directions.find((d) => d.id === directionId)?.name ?? '';
+    const gaps = await mockApi.getSkillGaps(directionId);
+    const demanded = gaps.skills.filter((s) => s.has).map((s) => s.name);
+    const skills = demanded.length > 0 ? demanded : [...mySkills];
+    resumes.set(directionId, {
+      position: `Junior-специалист: ${name}`,
+      about: `Демо-текст для направления «${name}». С настоящим бэком его напишет нейросеть по сохранённым вакансиям.`,
+      skills,
+      generatedAt: new Date().toISOString(),
+    });
+    return mockApi.getResume(directionId);
   },
 };

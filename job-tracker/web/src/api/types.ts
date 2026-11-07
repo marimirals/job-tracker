@@ -15,6 +15,7 @@ export interface Vacancy {
   workFormat: WorkFormat | null;
   grade: string | null;
   status: VacancyStatus;
+  directionId: number | null;
   match: number | null;
   createdAt: string;
 }
@@ -34,6 +35,7 @@ export interface VacancyDetails extends Vacancy {
 export interface VacancyPatch {
   status?: VacancyStatus;
   notes?: string;
+  directionId?: number | null;
 }
 
 export interface SkillStat {
@@ -49,4 +51,26 @@ export interface SkillGapsStats {
   averageMatch: number | null;
   highMatchCount: number;
   skills: SkillStat[];
+}
+
+export interface Direction {
+  id: number;
+  name: string;
+  vacancyCount: number;
+}
+
+export interface Resume {
+  directionId: number;
+  position: string;
+  about: string;
+  skills: string[];
+  missing: string[];
+  vacancyCount: number;
+  generatedAt: string | null;
+}
+
+export interface ResumeUpdate {
+  position: string;
+  about: string;
+  skills: string[];
 }

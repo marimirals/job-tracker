@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { useDeleteVacancy, useUpdateVacancy, useVacancy } from '../../api/queries';
 import type { VacancyDetails, VacancySkill } from '../../api/types';
+import { DirectionSelect } from '../../components/DirectionSelect/DirectionSelect';
 import { MatchBadge } from '../../components/MatchBadge/MatchBadge';
 import { SkillChip } from '../../components/SkillChip/SkillChip';
 import { StatusSelect } from '../../components/StatusSelect/StatusSelect';
@@ -109,10 +110,16 @@ function DrawerContent({ vacancy, onDeleted }: DrawerContentProps) {
         <SkillList skills={missingSkills} variant="missing" />
       </section>
 
-      <section className={styles.section}>
-        <h3 className={styles.sectionTitle}>Статус</h3>
-        <StatusSelect vacancyId={vacancy.id} value={vacancy.status} />
-      </section>
+      <div className={styles.fields}>
+        <section className={styles.section}>
+          <h3 className={styles.sectionTitle}>Статус</h3>
+          <StatusSelect vacancyId={vacancy.id} value={vacancy.status} />
+        </section>
+        <section className={styles.section}>
+          <h3 className={styles.sectionTitle}>Направление</h3>
+          <DirectionSelect vacancyId={vacancy.id} value={vacancy.directionId} />
+        </section>
+      </div>
 
       <section className={styles.section}>
         <h3 className={styles.sectionTitle}>Заметки</h3>
