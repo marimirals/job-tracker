@@ -12,6 +12,7 @@ import { useVacancies } from '../../api/queries';
 import type { Vacancy, VacancyStatus } from '../../api/types';
 import { EmptyState } from '../../components/EmptyState/EmptyState';
 import { MatchBadge } from '../../components/MatchBadge/MatchBadge';
+import { PageHeader } from '../../components/PageHeader/PageHeader';
 import { StatusSelect } from '../../components/StatusSelect/StatusSelect';
 import { STATUS_LABELS, STATUSES, WORK_FORMAT_LABELS } from '../../constants';
 import { formatDate, formatSalary } from '../../utils/format';
@@ -37,13 +38,13 @@ const columns = [
   columnHelper.accessor((row) => row.salaryTo ?? row.salaryFrom ?? -1, {
     id: 'salary',
     header: 'Зарплата',
-    cell: ({ row }) => formatSalary(row.original),
+    cell: ({ row }) => <span className={styles.nowrap}>{formatSalary(row.original)}</span>,
   }),
   columnHelper.accessor('workFormat', {
     header: 'Формат',
     cell: ({ getValue }) => {
       const format = getValue();
-      return format ? WORK_FORMAT_LABELS[format] : '—';
+      return format ? WORK_FORMAT_LABELS[format] : <span className={styles.muted}>—</span>;
     },
   }),
   columnHelper.accessor((row) => row.match ?? -1, {
@@ -58,7 +59,7 @@ const columns = [
   }),
   columnHelper.accessor('createdAt', {
     header: 'Добавлена',
-    cell: ({ getValue }) => formatDate(getValue()),
+    cell: ({ getValue }) => <span className={styles.nowrap}>{formatDate(getValue())}</span>,
   }),
 ];
 
@@ -101,7 +102,7 @@ export function VacanciesPage() {
   if (vacancies.length === 0) {
     return (
       <EmptyState
-        title="Пока пусто"
+        title="Здесь появятся твои вакансии"
         description="Открой страницу вакансии и нажми «Сохранить вакансию» в расширении."
       />
     );
@@ -110,34 +111,39 @@ export function VacanciesPage() {
   const rows = table.getRowModel().rows;
 
   return (
-    <section className={styles.page}>
-      <header className={styles.header}>
-        <h1>
-          Вакансии <span className={styles.count}>{vacancies.length}</span>
-        </h1>
-        <div className={styles.filters}>
-          <input
-            type="search"
-            className={styles.search}
-            placeholder="Поиск по должности или компании"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-          />
-          <select
-            className={styles.select}
-            value={statusFilter}
-            aria-label="Фильтр по статусу"
-            onChange={(event) => setStatusFilter(event.target.value as StatusFilter)}
-          >
-            <option value="all">Все статусы</option>
-            {STATUSES.map((status) => (
-              <option key={status} value={status}>
-                {STATUS_LABELS[status]}
-              </option>
-            ))}
-          </select>
-        </div>
-      </header>
+    <section>
+      <PageHeader
+        title={
+          <>
+            Вакансии <span className={styles.count}>{vacancies.length}</span>
+          </>
+        }
+        actions={
+          <>
+            <input
+              type="search"
+              className={styles.search}
+              placeholder="Поиск по должности или компании"
+              aria-label="Поиск"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
+            <select
+              className={styles.select}
+              value={statusFilter}
+              aria-label="Фильтр по статусу"
+              onChange={(event) => setStatusFilter(event.target.value as StatusFilter)}
+            >
+              <option value="all">Все статусы</option>
+              {STATUSES.map((status) => (
+                <option key={status} value={status}>
+                  {STATUS_LABELS[status]}
+                </option>
+              ))}
+            </select>
+          </>
+        }
+      />
 
       <div className={styles.tableWrapper}>
         <table className={styles.table}>
@@ -162,8 +168,8 @@ export function VacanciesPage() {
                           onClick={header.column.getToggleSortingHandler()}
                         >
                           {label}
-                          <span className={styles.sortIcon}>
-                            {sorted === 'asc' ? '▲' : sorted === 'desc' ? '▼' : ''}
+                          <span className={styles.sortIcon} aria-hidden="true">
+                            {sorted === 'asc' ? '↑' : sorted === 'desc' ? '↓' : ''}
                           </span>
                         </button>
                       ) : (
@@ -195,7 +201,7 @@ export function VacanciesPage() {
             ))}
           </tbody>
         </table>
-        {rows.length === 0 && <p className={styles.state}>Ничего не найдено</p>}
+        {rows.length === 0 && <p className={styles.state}>Ничего не найдено. Измени запрос или фильтр.</p>}
       </div>
 
       {selectedId !== null && (

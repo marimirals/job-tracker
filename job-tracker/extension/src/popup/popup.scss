@@ -1,0 +1,156 @@
+$popup-width: 340px;
+$gap: 12px;
+
+:root {
+  --text: #2f2d1f;
+  --muted: #76715a;
+  --accent: #6b6840;
+  --accent-hover: #575430;
+  --peach: #f4a983;
+  --success: #4f5a2a;
+  --success-soft: #e3e7c6;
+  --warning: #9a4b28;
+  --warning-soft: #fde2d3;
+  --error: #9f3535;
+  --error-soft: #f9dcdc;
+  --radius: 14px;
+  --font-body: 'Montserrat Variable', 'Montserrat', system-ui, sans-serif;
+  --font-display: 'Unbounded Variable', 'Unbounded', 'Montserrat Variable', sans-serif;
+
+  color-scheme: light;
+}
+
+@mixin status-variant($name) {
+  &--#{$name} {
+    background: var(--#{$name}-soft);
+    color: var(--#{$name});
+  }
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(220px 180px at 0% 0%, #fbd3bf 0%, rgba(251, 211, 191, 0) 70%),
+    radial-gradient(240px 200px at 100% 100%, #dcdab4 0%, rgba(220, 218, 180, 0) 70%),
+    #fffdfb;
+  color: var(--text);
+  font:
+    14px/1.45 var(--font-body);
+}
+
+.popup {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: $gap;
+  width: $popup-width;
+  padding: 16px;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  &__logo {
+    border-radius: 8px;
+    box-shadow: 0 4px 12px -4px rgba(84, 78, 40, 0.6);
+  }
+
+  &__title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 500;
+  }
+
+  &__page {
+    margin: 0;
+    padding: 10px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    border-radius: var(--radius);
+    background: rgba(255, 255, 255, 0.6);
+    box-shadow: inset 0 1px 0 #ffffff;
+    color: var(--muted);
+  }
+
+  &__page-title {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  &__button {
+    padding: 11px;
+    border: none;
+    border-radius: 999px;
+    background: var(--accent);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      background: var(--accent-hover);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: progress;
+    }
+  }
+
+  &__status {
+    padding: 10px 12px;
+    border-radius: var(--radius);
+    background: rgba(255, 255, 255, 0.7);
+
+    &:empty {
+      display: none;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    p + p {
+      margin-top: 4px;
+    }
+
+    &--loading {
+      color: var(--muted);
+    }
+
+    @include status-variant(success);
+    @include status-variant(warning);
+    @include status-variant(error);
+  }
+
+  &__link {
+    align-self: flex-start;
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--accent);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover {
+      text-decoration: underline;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+  }
+}

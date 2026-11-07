@@ -63,7 +63,7 @@ function DrawerContent({ vacancy, onDeleted }: DrawerContentProps) {
     formatSalary(vacancy),
     vacancy.workFormat ? WORK_FORMAT_LABELS[vacancy.workFormat] : null,
     vacancy.grade,
-  ].filter(Boolean);
+  ].filter((item): item is string => Boolean(item));
 
   const handleDelete = () => {
     if (window.confirm('Удалить вакансию?')) {
@@ -76,9 +76,13 @@ function DrawerContent({ vacancy, onDeleted }: DrawerContentProps) {
       <header className={styles.header}>
         <h2 className={styles.title}>{vacancy.title}</h2>
         <p className={styles.company}>{vacancy.company ?? 'Компания не указана'}</p>
-        <p className={styles.meta}>{meta.join(' · ')}</p>
+        <ul className={styles.meta}>
+          {meta.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
         <a className={styles.link} href={vacancy.url} target="_blank" rel="noopener noreferrer">
-          Открыть оригинал ↗
+          Открыть вакансию на сайте
         </a>
       </header>
 
@@ -96,12 +100,12 @@ function DrawerContent({ vacancy, onDeleted }: DrawerContentProps) {
       </section>
 
       <section className={styles.section}>
-        <h3 className={styles.sectionTitle}>Есть у тебя · {hasSkills.length}</h3>
+        <h3 className={styles.sectionTitle}>Есть у тебя ({hasSkills.length})</h3>
         <SkillList skills={hasSkills} variant="has" />
       </section>
 
       <section className={styles.section}>
-        <h3 className={styles.sectionTitle}>Не хватает · {missingSkills.length}</h3>
+        <h3 className={styles.sectionTitle}>Не хватает ({missingSkills.length})</h3>
         <SkillList skills={missingSkills} variant="missing" />
       </section>
 
@@ -116,7 +120,7 @@ function DrawerContent({ vacancy, onDeleted }: DrawerContentProps) {
           className={styles.notes}
           value={notes}
           rows={4}
-          placeholder="Контакты рекрутера, впечатления, вопросы к собесу…"
+          placeholder="Контакты рекрутера, впечатления, вопросы к собеседованию"
           onChange={(event) => setNotes(event.target.value)}
         />
         <button
@@ -130,7 +134,7 @@ function DrawerContent({ vacancy, onDeleted }: DrawerContentProps) {
       </section>
 
       <details className={styles.raw}>
-        <summary>Исходный текст вакансии</summary>
+        <summary>Полный текст вакансии</summary>
         <pre>{vacancy.rawText}</pre>
       </details>
 
@@ -153,7 +157,7 @@ interface SkillListProps {
 
 function SkillList({ skills, variant }: SkillListProps) {
   if (skills.length === 0) {
-    return <p className={styles.muted}>—</p>;
+    return <p className={styles.muted}>Нет</p>;
   }
 
   return (

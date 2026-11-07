@@ -1,3 +1,5 @@
+import '@fontsource-variable/montserrat';
+import '@fontsource-variable/unbounded';
 import { DASHBOARD_URL } from '../shared/config';
 import { sendMessage } from '../shared/messages';
 import type { SaveResult } from '../shared/types';
@@ -13,7 +15,7 @@ function getElement<T extends HTMLElement>(id: string): T {
   return element as T;
 }
 
-const pageTitle = getElement<HTMLParagraphElement>('page-title');
+const pageTitle = getElement<HTMLSpanElement>('page-title');
 const saveButton = getElement<HTMLButtonElement>('save-button');
 const status = getElement<HTMLDivElement>('status');
 const dashboardButton = getElement<HTMLButtonElement>('dashboard-button');

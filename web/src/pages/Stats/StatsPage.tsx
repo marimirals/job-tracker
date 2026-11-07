@@ -3,20 +3,37 @@ import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 
 import { useMySkills, useSkillGaps, useUpdateMySkills } from '../../api/queries';
 import type { SkillType } from '../../api/types';
 import { EmptyState } from '../../components/EmptyState/EmptyState';
+import { PageHeader } from '../../components/PageHeader/PageHeader';
+import { Segmented, type SegmentedOption } from '../../components/Segmented/Segmented';
 import { HIGH_MATCH } from '../../constants';
 import styles from './StatsPage.module.scss';
 
+type Scope = 'missing' | 'all';
 type TypeFilter = SkillType | 'all';
 
+const SCOPE_OPTIONS: SegmentedOption<Scope>[] = [
+  { value: 'missing', label: 'Чего не хватает' },
+  { value: 'all', label: 'Все навыки' },
+];
+
+const TYPE_OPTIONS: SegmentedOption<TypeFilter>[] = [
+  { value: 'all', label: 'Все' },
+  { value: 'hard', label: 'Хард' },
+  { value: 'soft', label: 'Софт' },
+];
+
 const NO_SKILLS: string[] = [];
-const CHART_LIMIT = 15;
-const ROW_HEIGHT = 32;
+const CHART_LIMIT = 12;
+const ROW_HEIGHT = 34;
+
+const COLOR_MISSING = '#f4a983';
+const COLOR_HAS = '#aaa572';
 
 export function StatsPage() {
   const { data: stats, isPending, isError } = useSkillGaps();
   const { data: mySkills = NO_SKILLS } = useMySkills();
   const updateSkills = useUpdateMySkills();
-  const [onlyMissing, setOnlyMissing] = useState(true);
+  const [scope, setScope] = useState<Scope>('missing');
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
 
   if (isPending) {
@@ -24,23 +41,37 @@ export function StatsPage() {
   }
 
   if (isError) {
-    return <EmptyState title="Не удалось загрузить статистику" />;
+    return <EmptyState title="Не удалось загрузить статистику" description="Проверь, что сервер запущен, и обнови страницу." />;
   }
 
   if (stats.totalVacancies === 0) {
-    return <EmptyState title="Нет данных" description="Сохрани несколько вакансий, и здесь появится статистика." />;
+    return (
+      <EmptyState
+        title="Статистика появится после первых вакансий"
+        description="Сохрани несколько вакансий через расширение, и здесь будет видно, каких навыков чаще всего не хватает."
+      />
+    );
   }
 
   const filtered = stats.skills.filter(
-    (skill) => (!onlyMissing || !skill.has) && (typeFilter === 'all' || skill.type === typeFilter),
+    (skill) => (scope === 'all' || !skill.has) && (typeFilter === 'all' || skill.type === typeFilter),
   );
   const chartData = filtered.slice(0, CHART_LIMIT);
 
   const addSkill = (name: string) => updateSkills.mutate([...mySkills, name]);
 
   return (
-    <section className={styles.page}>
-      <h1>Статистика навыков</h1>
+    <section>
+      <PageHeader
+        title="Статистика навыков"
+        description="Что чаще всего просят в сохранённых вакансиях и чего из этого у тебя пока нет."
+        actions={
+          <>
+            <Segmented label="Какие навыки показать" options={SCOPE_OPTIONS} value={scope} onChange={setScope} />
+            <Segmented label="Тип навыков" options={TYPE_OPTIONS} value={typeFilter} onChange={setTypeFilter} />
+          </>
+        }
+      />
 
       <div className={styles.cards}>
         <div className={styles.card}>
@@ -55,104 +86,105 @@ export function StatsPage() {
         </div>
         <div className={styles.card}>
           <span className={styles.cardValue}>{stats.highMatchCount}</span>
-          <span className={styles.cardLabel}>с совпадением {HIGH_MATCH}%+</span>
+          <span className={styles.cardLabel}>с совпадением от {HIGH_MATCH}%</span>
         </div>
       </div>
 
-      <div className={styles.controls}>
-        <label className={styles.checkbox}>
-          <input
-            type="checkbox"
-            checked={onlyMissing}
-            onChange={(event) => setOnlyMissing(event.target.checked)}
-          />
-          Только те, которых у меня нет
-        </label>
-        <select
-          className={styles.select}
-          value={typeFilter}
-          aria-label="Тип навыков"
-          onChange={(event) => setTypeFilter(event.target.value as TypeFilter)}
-        >
-          <option value="all">Все навыки</option>
-          <option value="hard">Хард-скиллы</option>
-          <option value="soft">Софт-скиллы</option>
-        </select>
-      </div>
-
       {chartData.length === 0 ? (
-        <EmptyState title="Пробелов нет" description="Все навыки из вакансий у тебя уже есть." />
+        <EmptyState
+          title="Пробелов нет"
+          description="Все навыки из сохранённых вакансий у тебя уже есть. Переключись на «Все навыки», чтобы увидеть полный список."
+        />
       ) : (
-        <>
-          <div className={styles.chartCard}>
-            <h2 className={styles.chartTitle}>В каком проценте вакансий встречается навык</h2>
-            <div className={styles.legend}>
-              <span className={styles.legendItem}>
-                <span className={styles.dotMissing} /> нет у тебя
-              </span>
-              {!onlyMissing && (
+        <div className={styles.grid}>
+          <div className={styles.panel}>
+            <div className={styles.panelHeader}>
+              <h2 className={styles.panelTitle}>Как часто встречается навык</h2>
+              <div className={styles.legend}>
                 <span className={styles.legendItem}>
-                  <span className={styles.dotHas} /> есть у тебя
+                  <span className={styles.dot} style={{ background: COLOR_MISSING }} /> нет у тебя
                 </span>
-              )}
+                {scope === 'all' && (
+                  <span className={styles.legendItem}>
+                    <span className={styles.dot} style={{ background: COLOR_HAS }} /> есть у тебя
+                  </span>
+                )}
+              </div>
             </div>
             <ResponsiveContainer width="100%" height={chartData.length * ROW_HEIGHT + 40}>
-              <BarChart data={chartData} layout="vertical" margin={{ left: 8, right: 24 }}>
+              <BarChart data={chartData} layout="vertical" margin={{ left: 0, right: 16 }}>
                 <XAxis
                   type="number"
                   domain={[0, 100]}
                   tickFormatter={(value: number) => `${value}%`}
-                  stroke="var(--muted)"
+                  stroke="#76715a"
+                  tickLine={false}
+                  axisLine={false}
                 />
                 <YAxis
                   type="category"
                   dataKey="name"
-                  width={140}
-                  tick={{ fill: 'var(--text)', fontSize: 13 }}
-                  stroke="var(--muted)"
+                  width={160}
+                  tick={{ fill: '#2f2d1f', fontSize: 12 }}
+                  tickLine={false}
+                  axisLine={false}
                 />
                 <Tooltip
                   formatter={(value) => [`${value}%`, 'Встречается в вакансиях']}
-                  cursor={{ fill: 'var(--surface)' }}
+                  cursor={{ fill: 'rgba(255, 255, 255, 0.5)' }}
                   contentStyle={{
-                    background: 'var(--bg)',
-                    border: '1px solid var(--border)',
-                    borderRadius: 8,
+                    background: 'rgba(255, 255, 255, 0.92)',
+                    border: '1px solid rgba(94, 90, 52, 0.14)',
+                    borderRadius: 12,
                   }}
                 />
-                <Bar dataKey="percent" radius={[0, 4, 4, 0]}>
+                <Bar dataKey="percent" radius={[0, 999, 999, 0]} barSize={16}>
                   {chartData.map((skill) => (
-                    <Cell key={skill.name} fill={skill.has ? 'var(--success)' : 'var(--accent)'} />
+                    <Cell key={skill.name} fill={skill.has ? COLOR_HAS : COLOR_MISSING} />
                   ))}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
+            {filtered.length > CHART_LIMIT && (
+              <p className={styles.chartNote}>На графике первые {CHART_LIMIT}, остальные навыки есть в списке.</p>
+            )}
           </div>
 
-          <ul className={styles.list}>
-            {filtered.map((skill) => (
-              <li key={skill.name} className={styles.listItem}>
-                <span className={styles.skillName}>{skill.name}</span>
-                <span className={styles.skillMeta}>
-                  {skill.type === 'hard' ? 'хард' : 'софт'} · в {skill.count} из{' '}
-                  {stats.totalVacancies} вакансий ({skill.percent}%)
-                </span>
-                {skill.has ? (
-                  <span className={styles.hasLabel}>есть</span>
-                ) : (
-                  <button
-                    type="button"
-                    className={styles.addButton}
-                    disabled={updateSkills.isPending}
-                    onClick={() => addSkill(skill.name)}
-                  >
-                    + В мои навыки
-                  </button>
-                )}
-              </li>
-            ))}
-          </ul>
-        </>
+          <div className={styles.panel}>
+            <div className={styles.panelHeader}>
+              <h2 className={styles.panelTitle}>Список</h2>
+              <span className={styles.panelHint}>
+                из {stats.totalVacancies} вакансий
+              </span>
+            </div>
+            <ul className={styles.list}>
+              {filtered.map((skill) => (
+                <li key={skill.name} className={styles.listItem}>
+                  <div className={styles.skill}>
+                    <span className={styles.skillName}>{skill.name}</span>
+                    <span className={styles.skillMeta}>
+                      {skill.type === 'hard' ? 'хард' : 'софт'}, в {skill.count} вакансиях
+                    </span>
+                  </div>
+                  <span className={styles.percent}>{skill.percent}%</span>
+                  {skill.has ? (
+                    <span className={styles.hasLabel}>есть</span>
+                  ) : (
+                    <button
+                      type="button"
+                      className={styles.addButton}
+                      disabled={updateSkills.isPending}
+                      onClick={() => addSkill(skill.name)}
+                      aria-label={`Добавить ${skill.name} в мои навыки`}
+                    >
+                      Добавить
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
       )}
     </section>
   );

@@ -2,36 +2,60 @@
 
 .layout {
   display: grid;
-  grid-template-columns: 220px 1fr;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 28px;
   min-height: 100vh;
+  padding: 20px;
 
   @include mobile {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+    padding: 12px;
   }
 }
 
 .sidebar {
+  @include glass(0.45);
+
+  position: sticky;
+  top: 20px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  padding: 24px 16px;
-  border-right: 1px solid var(--border);
-  background: var(--surface);
+  gap: 28px;
+  height: calc(100vh - 40px);
+  padding: 22px 14px;
+  border-radius: var(--radius-xl);
 
   @include mobile {
+    position: static;
     flex-direction: row;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 16px;
-    padding: 12px 16px;
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-    overflow-x: auto;
+    gap: 12px;
+    height: auto;
+    padding: 12px;
+    border-radius: var(--radius-lg);
   }
 }
 
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 8px;
+}
+
 .logo {
-  font-size: 16px;
-  font-weight: 700;
+  flex-shrink: 0;
+  border-radius: 10px;
+  box-shadow: 0 6px 16px -6px rgba(84, 78, 40, 0.6);
+}
+
+.name {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
   white-space: nowrap;
 }
 
@@ -42,38 +66,76 @@
 
   @include mobile {
     flex-direction: row;
+    order: 3;
+    width: 100%;
+    overflow-x: auto;
   }
 }
 
 .link {
-  padding: 8px 12px;
-  border-radius: var(--radius);
-  color: var(--text);
+  position: relative;
+  padding: 10px 14px 10px 30px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  color: var(--muted);
+  font-weight: 500;
   text-decoration: none;
   white-space: nowrap;
+  transition:
+    background 0.15s,
+    color 0.15s;
 
   @include focus-ring;
 
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 14px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: transparent;
+    transform: translateY(-50%);
+  }
+
   &:hover {
-    background: var(--border);
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.45);
+  }
+
+  @include mobile {
+    padding: 8px 14px 8px 26px;
+
+    &::before {
+      left: 12px;
+    }
   }
 }
 
 .active {
-  background: var(--accent-soft);
-  color: var(--accent);
+  border-color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.75);
+  box-shadow:
+    inset 0 1px 0 #ffffff,
+    0 8px 20px -12px rgba(84, 78, 40, 0.5);
+  color: var(--text);
   font-weight: 600;
 
+  &::before {
+    background: var(--peach);
+  }
+
   &:hover {
-    background: var(--accent-soft);
+    background: rgba(255, 255, 255, 0.85);
   }
 }
 
 .mockBadge {
   margin-top: auto;
-  padding: 4px 8px;
-  border-radius: var(--radius);
-  background: var(--warning-soft);
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--peach-soft);
   color: var(--warning);
   font-size: 12px;
   font-weight: 600;
@@ -88,9 +150,15 @@
 
 .content {
   min-width: 0;
-  padding: 32px;
+  padding: 16px 4px 48px;
 
   @include mobile {
-    padding: 16px;
+    padding: 4px 0 32px;
   }
+}
+
+.inner {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
 }

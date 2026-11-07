@@ -1,0 +1,108 @@
+@use '../../styles/mixins' as *;
+
+.count {
+  color: var(--khaki);
+}
+
+.search {
+  @include control;
+
+  width: 300px;
+
+  @include mobile {
+    width: 100%;
+  }
+}
+
+.select {
+  @include control;
+
+  cursor: pointer;
+}
+
+.tableWrapper {
+  @include glass;
+
+  overflow-x: auto;
+  border-radius: var(--radius-xl);
+}
+
+.table {
+  width: 100%;
+  min-width: 820px;
+  border-collapse: collapse;
+
+  th {
+    padding: 16px 18px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 600;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
+}
+
+.sortButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:hover {
+    color: var(--text);
+  }
+}
+
+.sortIcon {
+  min-width: 10px;
+  color: var(--accent);
+}
+
+.row {
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &:hover,
+  &:focus-visible {
+    background: rgba(255, 255, 255, 0.55);
+    outline: none;
+  }
+}
+
+.title {
+  max-width: 420px;
+  font-weight: 600;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.state {
+  padding: 24px;
+  color: var(--muted);
+  text-align: center;
+}

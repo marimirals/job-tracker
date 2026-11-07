@@ -1,0 +1,200 @@
+@use '../../styles/mixins' as *;
+
+.notice {
+  display: inline-block;
+  margin: -8px 0 20px;
+  padding: 8px 14px;
+  border-radius: var(--radius);
+  background: var(--peach-soft);
+  color: var(--warning);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px 9px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.35);
+  color: var(--muted);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+
+  @include focus-ring;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.65);
+    color: var(--text);
+  }
+}
+
+.tabActive {
+  @include glass(0.85);
+
+  color: var(--text);
+  font-weight: 600;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.9);
+  }
+
+  .tabCount {
+    background: var(--peach);
+    color: #ffffff;
+  }
+}
+
+.tabCount {
+  min-width: 24px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(94, 90, 52, 0.1);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.addTab {
+  padding: 9px 16px;
+  border: 1px dashed rgba(94, 90, 52, 0.3);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  cursor: pointer;
+
+  @include focus-ring;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(320px, 0.85fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 20px;
+
+  @include mobile {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.panel {
+  @include panel;
+
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.source {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label {
+  font-weight: 700;
+}
+
+.labelRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.counter {
+  color: var(--muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.counterOver {
+  color: var(--error);
+  font-weight: 600;
+}
+
+.input {
+  @include control;
+}
+
+.textarea {
+  @include control;
+
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.primary {
+  @include button(primary);
+}
+
+.secondary {
+  @include button(secondary);
+}
+
+.preview {
+  position: sticky;
+  top: 20px;
+
+  @include mobile {
+    position: static;
+  }
+}
+
+.previewHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding: 0 4px;
+  font-weight: 700;
+}
+
+.previewMeta {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 400;
+}

@@ -1,0 +1,49 @@
+@use '../../styles/mixins' as *;
+
+.select {
+  padding: 5px 28px 5px 12px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%2376715a' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-position: right 11px center;
+  background-repeat: no-repeat;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  appearance: none;
+
+  @include focus-ring;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: progress;
+  }
+}
+
+.saved {
+  border-color: var(--border);
+  background-color: rgba(255, 255, 255, 0.7);
+  color: var(--text);
+}
+
+.applied,
+.responded {
+  background-color: var(--accent-soft);
+  color: var(--accent);
+}
+
+.interview {
+  background-color: var(--warning-soft);
+  color: var(--warning);
+}
+
+.offer {
+  background-color: var(--success-soft);
+  color: var(--success);
+}
+
+.rejected {
+  background-color: var(--error-soft);
+  color: var(--error);
+}

@@ -1,0 +1,80 @@
+:root {
+  --bg: #fffdfb;
+  --surface: rgba(255, 255, 255, 0.55);
+  --surface-strong: rgba(255, 255, 255, 0.82);
+  --border: rgba(94, 90, 52, 0.14);
+  --text: #2f2d1f;
+  --muted: #76715a;
+  --accent: #6b6840;
+  --accent-hover: #575430;
+  --accent-soft: rgba(176, 172, 120, 0.24);
+  --khaki: #aaa572;
+  --peach: #f4a983;
+  --peach-soft: #fde6d9;
+  --success: #4f5a2a;
+  --success-soft: #e3e7c6;
+  --warning: #9a4b28;
+  --warning-soft: #fde2d3;
+  --error: #9f3535;
+  --error-soft: #f9dcdc;
+  --radius: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --shadow: 0 24px 60px -30px rgba(84, 78, 40, 0.45);
+  --font-body: 'Montserrat Variable', 'Montserrat', system-ui, sans-serif;
+  --font-display: 'Unbounded Variable', 'Unbounded', 'Montserrat Variable', sans-serif;
+
+  color-scheme: light;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  position: relative;
+  min-height: 100vh;
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font:
+    14px/1.5 var(--font-body);
+  font-feature-settings: 'lnum';
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(38vw 38vw at 8% 6%, #fbd3bf 0%, rgba(251, 211, 191, 0) 70%),
+    radial-gradient(42vw 42vw at 92% 14%, #dcdab4 0%, rgba(220, 218, 180, 0) 70%),
+    radial-gradient(46vw 36vw at 62% 100%, #f9cbb2 0%, rgba(249, 203, 178, 0) 70%),
+    radial-gradient(30vw 30vw at 30% 70%, #e8e6c9 0%, rgba(232, 230, 201, 0) 70%);
+  pointer-events: none;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  line-height: 1.2;
+}
+
+h1 {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+a {
+  color: var(--accent);
+}
+
+::selection {
+  background: var(--peach-soft);
+}
